@@ -11,242 +11,137 @@
 <!-- Librerie professionali -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r160/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/postprocessing/EffectComposer.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/postprocessing/RenderPass.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/postprocessing/UnrealBloomPass.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/controls/OrbitControls.js"></script>
-
 </head>
 <body>
 <script>
-let scene, camera, renderer, rocket, composer, clock;
+let scene, camera, renderer, rocket, composer;
 let smokeParticles = [];
 
 init();
 animate();
 
 function init() {
-  clock = new THREE.Clock();
-
-  // SCENA
   scene = new THREE.Scene();
 
-  // CAMERA
+  // Camera
   camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 5000);
   camera.position.set(0, 5, 15);
 
-  // RENDERER
-  renderer = new THREE.WebGLRenderer({antialias: true});
+  // Renderer
+  renderer = new THREE.WebGLRenderer({antialias:true});
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // CONTROLLI (solo debug)
-  // let controls = new THREE.OrbitControls(camera, renderer.domElement);
-
-  // LUCI
-  let light = new THREE.PointLight(0xffffff, 2, 100);
-  light.position.set(0, 10, 10);
+  // Lights
+  let light = new THREE.PointLight(0xffffff,2,100);
+  light.position.set(0,10,10);
   scene.add(light);
-  let ambient = new THREE.AmbientLight(0x555555);
-  scene.add(ambient);
+  scene.add(new THREE.AmbientLight(0x555555));
 
-  // STARS 3D
+  // Starfield
   let starGeo = new THREE.BufferGeometry();
   let starCount = 10000;
-  let positions = new Float32Array(starCount * 3);
-  for (let i=0;i<starCount*3;i++) positions[i] = (Math.random()-0.5)*2000;
+  let positions = new Float32Array(starCount*3);
+  for(let i=0;i<starCount*3;i++) positions[i] = (Math.random()-0.5)*2000;
   starGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
-  let starsMat = new THREE.PointsMaterial({ color:0xffffff, size:1 });
-  let starField = new THREE.Points(starGeo, starsMat);
-  scene.add(starField);
+  scene.add(new THREE.Points(starGeo,new THREE.PointsMaterial({color:0xffffff,size:1})));
 
-  // RAZZO
-  let bodyMat = new THREE.MeshStandardMaterial({color:0xffffff, roughness:0.4});
-  let bodyGeom = new THREE.CylinderGeometry(0.4,0.4,3,32);
-  let body = new THREE.Mesh(bodyGeom, bodyMat);
-
-  let noseGeom = new THREE.ConeGeometry(0.4,1,32);
-  let noseMat = new THREE.MeshStandardMaterial({color:0xff0000});
-  let nose = new THREE.Mesh(noseGeom, noseMat);
+  // Rocket
+  let body = new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,3,32), new THREE.MeshStandardMaterial({color:0xffffff}));
+  let nose = new THREE.Mesh(new THREE.ConeGeometry(0.4,1,32), new THREE.MeshStandardMaterial({color:0xff0000}));
   nose.position.y = 2;
-
   rocket = new THREE.Group();
   rocket.add(body);
   rocket.add(nose);
   rocket.position.y = -6;
   scene.add(rocket);
 
-  // FUMO PARTICELLARE
+  // Smoke particles
   createSmoke();
 
-  // POST-PROCESSING BLOOM
+  // Composer & Bloom
   composer = new THREE.EffectComposer(renderer);
-  let renderPass = new THREE.RenderPass(scene, camera);
-  composer.addPass(renderPass);
+  composer.addPass(new THREE.RenderPass(scene, camera));
+  composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth,window.innerHeight),1.5,0.4,0.85));
 
-  let bloomPass = new THREE.UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    1.5, 0.4, 0.85
-  );
-  composer.addPass(bloomPass);
-
-  // Animazione decollo GSAP
+  // Launch
   launchRocket();
 }
 
 function createSmoke() {
-  let smokeMaterial = new THREE.MeshLambertMaterial({
-    color:0xffffff, transparent:true, opacity:0.4
-  });
+  let material = new THREE.MeshLambertMaterial({color:0xffffff, transparent:true, opacity:0.4});
   for(let i=0;i<60;i++){
-    let particle = new THREE.Mesh(new THREE.PlaneGeometry(1,1), smokeMaterial);
-    particle.position.set((Math.random()-0.5)*0.5,-6+(Math.random()*0.2), (Math.random()-0.5)*0.5);
-    scene.add(particle);
-    smokeParticles.push(particle);
+    let p = new THREE.Mesh(new THREE.PlaneGeometry(1,1), material);
+    p.position.set((Math.random()-0.5)*0.5,-6+(Math.random()*0.2),(Math.random()-0.5)*0.5);
+    scene.add(p);
+    smokeParticles.push(p);
   }
 }
 
-<script>
-// AGGIORNAMENTO DECOLLO AVANZATO
-<script>
-// AGGIORNAMENTO DECOLLO AVANZATO
 function launchRocket() {
-  // Flash iniziale
+  // Flash
   const flash = document.createElement('div');
-  flash.style.position = 'absolute';
-  flash.style.top='0'; flash.style.left='0';
-  flash.style.width='100%'; flash.style.height='100%';
-  flash.style.background='white';
-  flash.style.opacity='0';
-  flash.style.pointerEvents='none';
+  Object.assign(flash.style,{
+    position:'absolute', top:'0', left:'0', width:'100%', height:'100%',
+    background:'white', opacity:'0', pointerEvents:'none'
+  });
   document.body.appendChild(flash);
-
-  gsap.to(flash, {opacity:1, duration:0.2});
-  gsap.to(flash, {opacity:0, duration:1, delay:0.2});
-
-  // Camera shake professionale
-  gsap.to(camera.position, {x:"+=0.2", yoyo:true, repeat:10, duration:0.05, ease:"power1.inOut"});
-
-  // Decollo razzo principale
-  gsap.to(rocket.position, {y:150, duration:12, ease:"power4.in"});
-
-  // Animazione particelle fiamma e propulsione
-  createWarpParticles();
-
-  // Effetto WARP finale
-  setTimeout(()=>{
-    let warpDiv = document.createElement('div');
-    warpDiv.style.position='absolute';
-    warpDiv.style.top='0'; warpDiv.style.left='0';
-    warpDiv.style.width='100%'; warpDiv.style.height='100%';
-    warpDiv.style.background='radial-gradient(circle, #00ffff, #000000)';
-    warpDiv.style.opacity='0';
-    document.body.appendChild(warpDiv);
-    gsap.to(warpDiv, {opacity:1, duration:2});
-    
-    // Redirect finale
-    setTimeout(()=>{ window.location.href='home.html'; },2500);
-  },11000);
-}
-
-// PARTICELLE DI WARP / PROPULSIONE
-function createWarpParticles(){
-  let particleCount = 200;
-  let geometry = new THREE.BufferGeometry();
-  let positions = [];
-  for(let i=0;i<particleCount;i++){
-    positions.push( (Math.random()-0.5)*1 ); // x
-    positions.push( -6 ); // y sotto razzo
-    positions.push( (Math.random()-0.5)*1 ); // z
-  }
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
-  let material = new THREE.PointsMaterial({color:0xffaa00, size:0.2});
-  let points = new THREE.Points(geometry, material);
-  scene.add(points);
-
-  // Animazione particelle
-  gsap.to(points.position, {y:150, duration:12, ease:"power4.in"});
-}
-</script>
-
-
-  gsap.to(flash, {opacity:1, duration:0.2});
-  gsap.to(flash, {opacity:0, duration:1, delay:0.2});
-
-  // Camera shake professionale
-  gsap.to(camera.position, {x:"+=0.2", yoyo:true, repeat:10, duration:0.05, ease:"power1.inOut"});
-
-  // Decollo razzo principale
-  gsap.to(rocket.position, {y:150, duration:12, ease:"power4.in"});
-
-  // Animazione particelle fiamma e propulsione
-  createWarpParticles();
-
-  // Effetto WARP finale
-  setTimeout(()=>{
-    let warpDiv = document.createElement('div');
-    warpDiv.style.position='absolute';
-    warpDiv.style.top='0'; warpDiv.style.left='0';
-    warpDiv.style.width='100%'; warpDiv.style.height='100%';
-    warpDiv.style.background='radial-gradient(circle, #00ffff, #000000)';
-    warpDiv.style.opacity='0';
-    document.body.appendChild(warpDiv);
-    gsap.to(warpDiv, {opacity:1, duration:2});
-    
-    // Redirect finale
-    setTimeout(()=>{ window.location.href='home.html'; },2500);
-  },11000);
-}
-
-// PARTICELLE DI WARP / PROPULSIONE
-function createWarpParticles(){
-  let particleCount = 200;
-  let geometry = new THREE.BufferGeometry();
-  let positions = [];
-  for(let i=0;i<particleCount;i++){
-    positions.push( (Math.random()-0.5)*1 ); // x
-    positions.push( -6 ); // y sotto razzo
-    positions.push( (Math.random()-0.5)*1 ); // z
-  }
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
-  let material = new THREE.PointsMaterial({color:0xffaa00, size:0.2});
-  let points = new THREE.Points(geometry, material);
-  scene.add(points);
-
-  // Animazione particelle
-  gsap.to(points.position, {y:150, duration:12, ease:"power4.in"});
-}
-</script>
+  gsap.to(flash,{opacity:1,duration:0.2});
+  gsap.to(flash,{opacity:0,duration:1,delay:0.2});
 
   // Camera shake
-  gsap.to(camera.position, {z:10, duration:0.2, yoyo:true, repeat:5, ease:"power2.inOut"});
+  gsap.to(camera.position,{x:"+=0.2",yoyo:true,repeat:10,duration:0.05,ease:"power1.inOut"});
 
-  // Decollo razzo
-  gsap.to(rocket.position, {y:150, duration:12, ease:"power4.in"});
+  // Rocket lift-off
+  gsap.to(rocket.position,{y:150,duration:12,ease:"power4.in"});
 
-  // Smoke anim
-  smokeParticles.forEach((p,i)=>{
-    gsap.to(p.position, {
-      y:"+="+Math.random()*150,
+  // Smoke animation
+  smokeParticles.forEach(p=>{
+    gsap.to(p.position,{
+      y:"+="+(Math.random()*150),
       x:"+="+(Math.random()-0.5)*10,
       z:"+="+(Math.random()-0.5)*10,
       opacity:0,
-      duration:12,
-      delay:0
+      duration:12
     });
   });
 
-  // Redirect dopo volo
-  setTimeout(()=>{ window.location.href="home.html"; },12000);
+  // Warp particles
+  createWarpParticles();
+
+  // Warp effect + redirect
+  setTimeout(()=>{
+    let warpDiv = document.createElement('div');
+    Object.assign(warpDiv.style,{
+      position:'absolute', top:'0', left:'0', width:'100%', height:'100%',
+      background:'radial-gradient(circle,#00ffff,#000000)', opacity:'0'
+    });
+    document.body.appendChild(warpDiv);
+    gsap.to(warpDiv,{opacity:1,duration:2});
+    setTimeout(()=>{ window.location.href='home.html'; },2500);
+  },11000);
+}
+
+function createWarpParticles(){
+  let particleCount = 200;
+  let geometry = new THREE.BufferGeometry();
+  let positions = [];
+  for(let i=0;i<particleCount;i++){
+    positions.push((Math.random()-0.5)*1,-6,(Math.random()-0.5)*1);
+  }
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
+  let points = new THREE.Points(geometry,new THREE.PointsMaterial({color:0xffaa00,size:0.2}));
+  scene.add(points);
+  gsap.to(points.position,{y:150,duration:12,ease:"power4.in"});
 }
 
 function animate(){
   requestAnimationFrame(animate);
   composer.render();
-  smokeParticles.forEach(p=>{
-    p.rotation.z += 0.01;
-  });
+  smokeParticles.forEach(p=>{ p.rotation.z += 0.01; });
 }
 </script>
 </body>
