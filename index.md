@@ -12,7 +12,7 @@
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-      const correctHash = "f9d3f9f7c3a4f3d6b4b9a3f9f0f3f9d3f9f7c3a4f3d6b4b9a3f9f0f3f9d3f9"; // ← hash di "password"
+      const correctHash = "661b63720e6d44e7025b0538d2285fe8cb8977026db8b4415654688bf897ad3c466ba138dc7cc7b83cf4771c222794adce3ca5b13ac0854b342f20b9e7d86e28";
       if (hashHex === correctHash) {
         document.getElementById("content").style.display = "block";
         document.getElementById("login").style.display = "none";
