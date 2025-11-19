@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Launch Scene</title>
+<style>
+  body { margin: 0; overflow: hidden; background: black; }
+  canvas { display: block; }
+</style>
+
+<!-- Librerie professionali -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r160/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/controls/OrbitControls.js"></script>
+
+</head>
+<body>
+<script>
+let scene, camera, renderer, rocket, composer, clock;
+let smokeParticles = [];
+
+init();
+animate();
+
+function init() {
+  clock = new THREE.Clock();
+
+  // SCENA
+  scene = new THREE.Scene();
+
+  // CAMERA
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 5000);
+  camera.position.set(0, 5, 15);
+
+  // RENDERER
+  renderer = new THREE.WebGLRenderer({antialias: true});
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  // CONTROLLI (solo debug)
+  // let controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+  // LUCI
+  let light = new THREE.PointLight(0xffffff, 2, 100);
+  light.position.set(0, 10, 10);
+  scene.add(light);
+  let ambient = new THREE.AmbientLight(0x555555);
+  scene.add(ambient);
+
+  // STARS 3D
+  let starGeo = new THREE.BufferGeometry();
+  let starCount = 10000;
+  let positions = new Float32Array(starCount * 3);
+  for (let i=0;i<starCount*3;i++) positions[i] = (Math.random()-0.5)*2000;
+  starGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+  let starsMat = new THREE.PointsMaterial({ color:0xffffff, size:1 });
+  let starField = new THREE.Points(starGeo, starsMat);
+  scene.add(starField);
+
+  // RAZZO
+  let bodyMat = new THREE.MeshStandardMaterial({color:0xffffff, roughness:0.4});
+  let bodyGeom = new THREE.CylinderGeometry(0.4,0.4,3,32);
+  let body = new THREE.Mesh(bodyGeom, bodyMat);
+
+  let noseGeom = new THREE.ConeGeometry(0.4,1,32);
+  let noseMat = new THREE.MeshStandardMaterial({color:0xff0000});
+  let nose = new THREE.Mesh(noseGeom, noseMat);
+  nose.position.y = 2;
+
+  rocket = new THREE.Group();
+  rocket.add(body);
+  rocket.add(nose);
+  rocket.position.y = -6;
+  scene.add(rocket);
+
+  // FUMO PARTICELLARE
+  createSmoke();
+
+  // POST-PROCESSING BLOOM
+  composer = new THREE.EffectComposer(renderer);
+  let renderPass = new THREE.RenderPass(scene, camera);
+  composer.addPass(renderPass);
+
+  let bloomPass = new THREE.UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    1.5, 0.4, 0.85
+  );
+  composer.addPass(bloomPass);
+
+  // Animazione decollo GSAP
+  launchRocket();
+}
+
+function createSmoke() {
+  let smokeMaterial = new THREE.MeshLambertMaterial({
+    color:0xffffff, transparent:true, opacity:0.4
+  });
+  for(let i=0;i<60;i++){
+    let particle = new THREE.Mesh(new THREE.PlaneGeometry(1,1), smokeMaterial);
+    particle.position.set((Math.random()-0.5)*0.5,-6+(Math.random()*0.2), (Math.random()-0.5)*0.5);
+    scene.add(particle);
+    smokeParticles.push(particle);
+  }
+}
+
+function launchRocket() {
+  // Camera shake
+  gsap.to(camera.position, {z:10, duration:0.2, yoyo:true, repeat:5, ease:"power2.inOut"});
+
+  // Decollo razzo
+  gsap.to(rocket.position, {y:150, duration:12, ease:"power4.in"});
+
+  // Smoke anim
+  smokeParticles.forEach((p,i)=>{
+    gsap.to(p.position, {
+      y:"+="+Math.random()*150,
+      x:"+="+(Math.random()-0.5)*10,
+      z:"+="+(Math.random()-0.5)*10,
+      opacity:0,
+      duration:12,
+      delay:0
+    });
+  });
+
+  // Redirect dopo volo
+  setTimeout(()=>{ window.location.href="home.html"; },12000);
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  composer.render();
+  smokeParticles.forEach(p=>{
+    p.rotation.z += 0.01;
+  });
+}
+</script>
+</body>
+</html>
