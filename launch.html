@@ -107,7 +107,67 @@ function createSmoke() {
   }
 }
 
+<script>
+// AGGIORNAMENTO DECOLLO AVANZATO
 function launchRocket() {
+  // Flash iniziale
+  const flash = document.createElement('div');
+  flash.style.position = 'absolute';
+  flash.style.top='0'; flash.style.left='0';
+  flash.style.width='100%'; flash.style.height='100%';
+  flash.style.background='white';
+  flash.style.opacity='0';
+  flash.style.pointerEvents='none';
+  document.body.appendChild(flash);
+
+  gsap.to(flash, {opacity:1, duration:0.2});
+  gsap.to(flash, {opacity:0, duration:1, delay:0.2});
+
+  // Camera shake professionale
+  gsap.to(camera.position, {x:"+=0.2", yoyo:true, repeat:10, duration:0.05, ease:"power1.inOut"});
+
+  // Decollo razzo principale
+  gsap.to(rocket.position, {y:150, duration:12, ease:"power4.in"});
+
+  // Animazione particelle fiamma e propulsione
+  createWarpParticles();
+
+  // Effetto WARP finale
+  setTimeout(()=>{
+    let warpDiv = document.createElement('div');
+    warpDiv.style.position='absolute';
+    warpDiv.style.top='0'; warpDiv.style.left='0';
+    warpDiv.style.width='100%'; warpDiv.style.height='100%';
+    warpDiv.style.background='radial-gradient(circle, #00ffff, #000000)';
+    warpDiv.style.opacity='0';
+    document.body.appendChild(warpDiv);
+    gsap.to(warpDiv, {opacity:1, duration:2});
+    
+    // Redirect finale
+    setTimeout(()=>{ window.location.href='home.html'; },2500);
+  },11000);
+}
+
+// PARTICELLE DI WARP / PROPULSIONE
+function createWarpParticles(){
+  let particleCount = 200;
+  let geometry = new THREE.BufferGeometry();
+  let positions = [];
+  for(let i=0;i<particleCount;i++){
+    positions.push( (Math.random()-0.5)*1 ); // x
+    positions.push( -6 ); // y sotto razzo
+    positions.push( (Math.random()-0.5)*1 ); // z
+  }
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
+  let material = new THREE.PointsMaterial({color:0xffaa00, size:0.2});
+  let points = new THREE.Points(geometry, material);
+  scene.add(points);
+
+  // Animazione particelle
+  gsap.to(points.position, {y:150, duration:12, ease:"power4.in"});
+}
+</script>
+
   // Camera shake
   gsap.to(camera.position, {z:10, duration:0.2, yoyo:true, repeat:5, ease:"power2.inOut"});
 
