@@ -1,108 +1,268 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>Accesso riservato</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #000;
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      overflow: hidden;
+<meta charset="UTF-8">
+<title>Accesso riservato</title>
+
+<style>
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #000;
+    color: #fff;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* ========================= */
+  /* LOGIN BOX */
+  /* ========================= */
+  .login-box {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    width: 300px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+  }
+
+  input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 16px;
+  }
+
+  button {
+    background-color: #1abc9c;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #fff;
+  }
+
+  /* ========================= */
+  /* CIELO STELLATO */
+  /* ========================= */
+  #stars {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: url('https://i.imgur.com/7Yb4QhZ.png') repeat;
+    background-size: contain;
+    animation: starMove 40s linear infinite;
+    display: none;
+    z-index: 1;
+  }
+
+  @keyframes starMove {
+    from { background-position: 0 0; }
+    to { background-position: 0 2000px; }
+  }
+
+  /* ========================= */
+  /* COUNTDOWN */
+  /* ========================= */
+  #countdown {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 120px;
+    opacity: 0;
+    transition: opacity 0.5s, transform 0.5s;
+    z-index: 20;
+  }
+
+  /* ========================= */
+  /* RAZZO */
+  /* ========================= */
+  .rocket {
+    position: absolute;
+    bottom: -200px;
+    left: 50%;
+    font-size: 110px;
+    transform: translateX(-50%);
+    animation: fly 6s ease-in forwards;
+    filter: drop-shadow(0 0 20px rgba(255,255,255,0.9));
+    z-index: 5;
+  }
+
+  @keyframes fly {
+    0% { bottom: -200px; }
+    100% { bottom: 140%; }
+  }
+
+  /* Fiamma */
+  .flame {
+    position: absolute;
+    left: 50%;
+    bottom: -50px;
+    transform: translateX(-50%);
+    font-size: 45px;
+    animation: flameAnim 0.15s infinite alternate;
+    filter: drop-shadow(0 0 20px orange);
+  }
+
+  @keyframes flameAnim {
+    from { transform: translate(-50%, 0) scale(1); }
+    to { transform: translate(-50%, 8px) scale(1.4); }
+  }
+
+  /* FUMO */
+  .smoke {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 15px;
+    height: 15px;
+    background: white;
+    border-radius: 50%;
+    opacity: 0.4;
+    animation: smokeRise 3s linear forwards;
+    filter: blur(4px);
+  }
+
+  @keyframes smokeRise {
+    0% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -200px) scale(3); }
+  }
+
+  /* FLASH INIZIALE */
+  #flash {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: white;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 30;
+  }
+
+  /* FADE OUT FINALE */
+  #fade {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: black;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: opacity 2s;
+    z-index: 50;
+  }
+</style>
+
+<script>
+  async function checkPassword() {
+    const input = document.getElementById("password").value;
+
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashHex = Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, "0")).join("");
+
+    const correctHash = "6c81ccae5eb7cb46ce3b480b916c725cda52ebe10b2265271639f137e3da4167"; // Polpo2006
+
+    if (hashHex !== correctHash) {
+      alert("Password errata");
+      return;
     }
 
-    .login-box {
-      background-color: rgba(255, 255, 255, 0.1);
-      padding: 40px;
-      border-radius: 12px;
-      text-align: center;
-      width: 300px;
-    }
+    // Nasconde il login
+    document.getElementById("login-box").style.display = "none";
+    document.getElementById("stars").style.display = "block";
 
-    input[type="password"] {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      margin-bottom: 15px;
-      font-size: 16px;
-    }
+    // Countdown
+    startCountdown();
+  }
 
-    button {
-      background-color: #1abc9c;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
-      color: #fff;
-    }
+  /* COUNTDOWN + ANIMAZIONE RAZZO */
+  function startCountdown() {
+    const countdown = document.getElementById("countdown");
+    
+    let n = 3;
+    countdown.style.opacity = 1;
 
-    #stars {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: url('https://www.transparenttextures.com/patterns/stardust.png');
-      animation: twinkle 5s infinite alternate;
-      display: none;
-    }
-
-    @keyframes twinkle {
-      from { opacity: 0.7; }
-      to { opacity: 1; }
-    }
-
-    .rocket {
-      font-size: 100px;
-      position: absolute;
-      bottom: -100px;
-      left: 50%;
-      transform: translateX(-50%);
-      animation: fly 5s ease-in forwards;
-    }
-
-    @keyframes fly {
-      0% { bottom: -100px; opacity: 1; }
-      100% { bottom: 120%; opacity: 0; }
-    }
-  </style>
-  <script>
-    async function checkPassword() {
-      const input = document.getElementById("password").value;
-      const encoder = new TextEncoder();
-      const data = encoder.encode(input);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-      const correctHash = "6c81ccae5eb7cb46ce3b480b916c725cda52ebe10b2265271639f137e3da4167"; // hash di "Polpo2006"
-      if (hashHex === correctHash) {
-        document.getElementById("login-box").style.display = "none";
-        document.getElementById("stars").style.display = "block";
-
-        // Mostra il razzo
-        const rocket = document.createElement("div");
-        rocket.className = "rocket";
-        rocket.textContent = "🚀";
-        document.body.appendChild(rocket);
-      } else {
-        alert("Password errata");
+    const interval = setInterval(() => {
+      countdown.textContent = n;
+      countdown.style.transform = "translate(-50%, -50%) scale(1.2)";
+      setTimeout(() => countdown.style.transform = "translate(-50%, -50%) scale(1)", 200);
+      
+      if (n === 0) {
+        clearInterval(interval);
+        countdown.style.display = "none";
+        launchRocket();
       }
-    }
-  </script>
-</head>
-<body>
-  <div class="login-box" id="login-box">
-    <h2>Accesso riservato</h2>
-    <input type="password" id="password" placeholder="Inserisci la password">
-    <button onclick="checkPassword()">Accedi</button>
-  </div>
+      
+      n--;
+    }, 1000);
+  }
 
-  <div id="stars"></div>
+  /* RAZZO + FUMO + FLASH */
+  function launchRocket() {
+    const flash = document.getElementById("flash");
+    flash.style.opacity = 1;
+
+    setTimeout(() => flash.style.opacity = 0, 300);
+
+    const rocket = document.createElement("div");
+    rocket.className = "rocket";
+    rocket.textContent = "🚀";
+
+    const flame = document.createElement("div");
+    flame.className = "flame";
+    flame.textContent = "🔥";
+
+    rocket.appendChild(flame);
+    document.body.appendChild(rocket);
+
+    // CREA FUMO CONTINUO
+    let smokeInterval = setInterval(() => {
+      let s = document.createElement("div");
+      s.className = "smoke";
+      rocket.appendChild(s);
+      setTimeout(() => s.remove(), 3000);
+    }, 150);
+
+    // Dopo il volo → riempie lo schermo di nero e reindirizza
+    setTimeout(() => {
+      clearInterval(smokeInterval);
+      const fade = document.getElementById("fade");
+      fade.style.opacity = 1;
+      setTimeout(() => {
+        window.location.href = "home.html"; // CAMBIA QUI
+      }, 2500);
+    }, 5500);
+  }
+</script>
+
+</head>
+
+<body>
+
+<div id="flash"></div>
+<div id="fade"></div>
+
+<div class="login-box" id="login-box">
+  <h2>Accesso riservato</h2>
+  <input type="password" id="password" placeholder="Inserisci la password">
+  <button onclick="checkPassword()">Accedi</button>
+</div>
+
+<div id="countdown"></div>
+
+<div id="stars"></div>
+
 </body>
 </html>
