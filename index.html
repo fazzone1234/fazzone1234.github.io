@@ -1,8 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Accesso protetto</title>
+  <title>Accesso riservato</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #000;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .login-box {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 40px;
+      border-radius: 12px;
+      text-align: center;
+      width: 300px;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #1abc9c;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    #stars {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: url('https://www.transparenttextures.com/patterns/stardust.png');
+      animation: twinkle 5s infinite alternate;
+      display: none;
+    }
+
+    @keyframes twinkle {
+      from { opacity: 0.7; }
+      to { opacity: 1; }
+    }
+
+    .rocket {
+      font-size: 100px;
+      position: absolute;
+      bottom: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: fly 5s ease-in forwards;
+    }
+
+    @keyframes fly {
+      0% { bottom: -100px; opacity: 1; }
+      100% { bottom: 120%; opacity: 0; }
+    }
+  </style>
   <script>
     async function checkPassword() {
       const input = document.getElementById("password").value;
@@ -12,32 +80,29 @@
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-      const correctHash = "6c81ccae5eb7cb46ce3b480b916c725cda52ebe10b2265271639f137e3da4167";
+      const correctHash = "6c81ccae5eb7cb46ce3b480b916c725cda52ebe10b2265271639f137e3da4167"; // hash di "Polpo2006"
       if (hashHex === correctHash) {
-        document.getElementById("content").style.display = "block";
-        document.getElementById("login").style.display = "none";
+        document.getElementById("login-box").style.display = "none";
+        document.getElementById("stars").style.display = "block";
+
+        // Mostra il razzo
+        const rocket = document.createElement("div");
+        rocket.className = "rocket";
+        rocket.textContent = "🚀";
+        document.body.appendChild(rocket);
       } else {
         alert("Password errata");
       }
     }
   </script>
-  <style>
-    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-    input { padding: 8px; font-size: 16px; }
-    button { padding: 8px 16px; font-size: 16px; margin-left: 10px; }
-    #content { margin-top: 30px; }
-  </style>
 </head>
 <body>
-  <div id="login">
-    <h2>Inserisci la password per accedere</h2>
-    <input type="password" id="password" placeholder="Password">
+  <div class="login-box" id="login-box">
+    <h2>Accesso riservato</h2>
+    <input type="password" id="password" placeholder="Inserisci la password">
     <button onclick="checkPassword()">Accedi</button>
   </div>
 
-  <div id="content" style="display:none;">
-    <h3>Benvenuto Tommaso 👋</h3>
-    <p>Questa è la tua area riservata. Puoi inserire dispense, appunti o link privati.</p>
-  </div>
+  <div id="stars"></div>
 </body>
 </html>
