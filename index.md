@@ -21,17 +21,23 @@
       }
     }
   </script>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    input { padding: 8px; font-size: 16px; }
+    button { padding: 8px 16px; font-size: 16px; margin-left: 10px; }
+    #content { margin-top: 30px; }
+  </style>
 </head>
 <body>
   <div id="login">
-    <h2>Inserisci la password</h2>
-    <input type="password" id="password">
+    <h2>Inserisci la password per accedere</h2>
+    <input type="password" id="password" placeholder="Password">
     <button onclick="checkPassword()">Accedi</button>
   </div>
 
   <div id="content" style="display:none;">
     <h3>Benvenuto Tommaso 👋</h3>
-    <p>Questa è la tua area riservata.</p>
+    <p>Questa è la tua area riservata. Puoi inserire dispense, appunti o link privati.</p>
   </div>
 </body>
 </html>
