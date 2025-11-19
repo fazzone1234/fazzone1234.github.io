@@ -2,243 +2,132 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Launch Login</title>
+<title>Login Cinematico</title>
+
 <style>
-  body { margin: 0; overflow: hidden; background: black; font-family: 'Segoe UI'; }
+  body {
+    margin: 0;
+    background: radial-gradient(circle at center, #0a0a0a, #000000);
+    overflow: hidden;
+    font-family: 'Segoe UI';
+  }
+
   #login-box {
     position: absolute;
     top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(255,255,255,0.1);
-    padding: 40px;
-    border-radius: 12px;
-    backdrop-filter: blur(6px);
-    z-index: 10;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: rgba(255,255,255,0.05);
+    padding: 50px;
+    border-radius: 20px;
+    width: 350px;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 0 40px rgba(0,255,255,0.3);
+    opacity: 0;
+  }
+
+  h1 {
     text-align: center;
     color: white;
+    margin-bottom: 30px;
+    text-shadow: 0 0 20px cyan;
   }
-  #password {
-    width: 100%; padding: 12px;
-    font-size: 18px; border-radius: 8px; border: none;
-    margin-bottom: 15px;
-  }
-  button {
-    padding: 12px 25px;
-    border: none; border-radius: 8px;
-    background: #1abc9c; color: white;
-    font-size: 18px; cursor: pointer;
-  }
-  #countdown {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
+
+  input {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    border: none;
+    font-size: 18px;
+    background: rgba(255,255,255,0.15);
     color: white;
-    font-size: 160px;
-    opacity: 0;
-    z-index: 9;
+    outline: none;
+    box-shadow: inset 0 0 10px rgba(0,255,255,0.3);
   }
+
+  button {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    background: cyan;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+    transition: 0.2s;
+  }
+
+  button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px cyan;
+  }
+
   #flash {
-    position: absolute; top: 0; left: 0;
+    position: absolute;
     width: 100%; height: 100%;
-    background: white; opacity: 0;
-    z-index: 20;
+    background: white;
+    opacity: 0;
     pointer-events: none;
   }
 </style>
+
+<!-- Libreria GSAP Professional Grade -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login-box">
-  <h2>Accesso riservato</h2>
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="checkPassword()">Accedi</button>
-</div>
-
-<div id="countdown"></div>
 <div id="flash"></div>
 
-<!-- THREE.JS SCENE -->
-<canvas id="scene"></canvas>
-
-<!-- LIBRARIES -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/controls/OrbitControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/objects/Smoke.js"></script>
+<div id="login-box">
+  <h1>ACCESSO</h1>
+  <input type="password" id="password" placeholder="Password...">
+  <button onclick="attemptLogin()">Accedi</button>
+</div>
 
 <script>
-/* =========================================================
-   PASSWORD CHECK
-========================================================= */
-async function checkPassword() {
+/* ANIMAZIONE INIZIALE DEL LOGIN */
+gsap.to("#login-box", {
+  opacity: 1,
+  scale: 1,
+  duration: 1.5,
+  ease: "back.out(1.7)"
+});
+
+/* CONTROLLO PASSWORD */
+async function attemptLogin() {
   const input = document.getElementById("password").value;
+
+  // Hash SHA-256
   const enc = new TextEncoder();
   const data = enc.encode(input);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  const hex = [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2,"0")).join("");
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hash = [...new Uint8Array(hashBuffer)]
+      .map(b => b.toString(16).padStart(2,'0')).join('');
+
   const correct = "6c81ccae5eb7cb46ce3b480b916c725cda52ebe10b2265271639f137e3da4167";
 
-  if (hex !== correct) return alert("Password errata");
-
-  document.getElementById("login-box").style.display = "none";
-  startCountdown();
-}
-
-/* =========================================================
-   COUNTDOWN ANIMATION (GSAP)
-========================================================= */
-function startCountdown() {
-  const c = document.getElementById("countdown");
-  let n = 3;
-
-  const tick = () => {
-    c.textContent = n;
-    gsap.fromTo(c, {opacity: 0, scale: 0.2}, {opacity: 1, scale: 1.2, duration: 0.4});
-    setTimeout(() => gsap.to(c, {opacity: 0, scale: 0.4, duration: 0.4}), 600);
-
-    if (n === 0) {
-      setTimeout(() => {
-        c.style.display = "none";
-        startLaunch3D();
-      }, 500);
-    }
-    n--;
-  };
-
-  tick();
-  let interval = setInterval(() => {
-    if (n < 0) clearInterval(interval);
-    else tick();
-  }, 1000);
-}
-
-/* =========================================================
-   THREE.JS 3D STARFIELD + ROCKET + PARTICLES
-========================================================= */
-
-let scene, camera, renderer, rocket;
-
-function startLaunch3D() {
-  init3D();
-  animate();
-  launchRocketAnimation();
-}
-
-function init3D() {
-  renderer = new THREE.WebGLRenderer({
-    canvas: document.getElementById("scene"),
-    antialias: true
-  });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-
-  scene = new THREE.Scene();
-
-  camera = new THREE.PerspectiveCamera(
-    60, window.innerWidth / window.innerHeight, 0.1, 2000
-  );
-  camera.position.set(0, 2, 8);
-
-  /* STARS */
-  let starsGeo = new THREE.BufferGeometry();
-  let starCount = 20000;
-  let positions = new Float32Array(starCount * 3);
-
-  for (let i=0; i<starCount*3; i++) {
-    positions[i] = (Math.random() - 0.5) * 4000;
+  if (hash !== correct) {
+    gsap.from("#password", {x: -20, repeat: 3, yoyo: true, duration: 0.1, ease: "power2.inOut"});
+    return;
   }
-  starsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  let starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1 });
-  let starField = new THREE.Points(starsGeo, starsMat);
-  scene.add(starField);
 
-  /* ROCKET (simple cylinder + cone) */
-  let body = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.4, 0.4, 3, 32),
-    new THREE.MeshStandardMaterial({ color: 0xffffff })
-  );
-  let nose = new THREE.Mesh(
-    new THREE.ConeGeometry(0.4, 1, 32),
-    new THREE.MeshStandardMaterial({ color: 0xff0000 })
-  );
-  nose.position.y = 2;
-  rocket = new THREE.Group();
-  rocket.add(body);
-  rocket.add(nose);
-  rocket.position.y = -6;
-  scene.add(rocket);
+  // Flash cinematografico
+  gsap.to("#flash", {opacity: 1, duration: 0.2});
+  gsap.to("#flash", {opacity: 0, duration: 1, delay: 0.2});
 
-  /* LIGHTS */
-  const light = new THREE.PointLight(0xffffff, 2, 50);
-  light.position.set(0,5,5);
-  scene.add(light);
-
-  /* Smoke system */
-  createSmoke();
-}
-
-/* SMOKE PARTICLES */
-let smokeParticles = [];
-function createSmoke() {
-  let smokeTexture = new THREE.TextureLoader().load("https://i.imgur.com/5cXFBn3.png");
-  let smokeMaterial = new THREE.MeshLambertMaterial({
-    map: smokeTexture,
-    transparent: true
-  });
-
-  for (let i = 0; i < 80; i++) {
-    let particle = new THREE.Mesh(
-      new THREE.PlaneGeometry(2, 2), smokeMaterial
-    );
-    particle.position.set(0, -5, 0);
-    particle.rotation.z = Math.random() * Math.PI;
-    scene.add(particle);
-    smokeParticles.push(particle);
-  }
-}
-
-/* ROCKET ANIMATION (GSAP) */
-function launchRocketAnimation() {
-  const flash = document.getElementById("flash");
-
-  // Flash di accensione
-  gsap.to(flash, {opacity: 1, duration: 0.2});
-  gsap.to(flash, {opacity: 0, duration: 1, delay: 0.2});
-
-  // Razzo che sale
-  gsap.to(rocket.position, {
-    y: 150,
-    duration: 12,
-    ease: "power4.in"
-  });
-
-  // Camera shake
-  gsap.fromTo(camera.position, 
-    {x:0.15}, 
-    {x:-0.15, yoyo:true, repeat:20, duration:0.05}
-  );
-
-  // Redirect finale
-  setTimeout(() => {
-    window.location.href = "home.html";
-  }, 12000);
-}
-
-/* ANIMATE LOOP */
-function animate() {
-  requestAnimationFrame(animate);
-
-  smokeParticles.forEach(p => {
-    p.position.y += 0.07;
-    p.position.x += (Math.random()-0.5)*0.05;
-    p.material.opacity -= 0.003;
-    if (p.material.opacity <= 0) {
-      p.position.set(0, -5, 0);
-      p.material.opacity = 0.4;
+  // Effetto dissolvenza login
+  gsap.to("#login-box", {
+    opacity: 0,
+    scale: 0.5,
+    duration: 1,
+    ease: "power4.in",
+    onComplete() {
+      window.location.href = "launch.html"; // Passo alla scena 3D
     }
   });
-
-  renderer.render(scene, camera);
 }
 </script>
 
