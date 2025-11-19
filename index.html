@@ -2,267 +2,245 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Accesso riservato</title>
-
+<title>Launch Login</title>
 <style>
-  body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: #000;
-    color: #fff;
-    overflow: hidden;
-    height: 100vh;
-  }
-
-  /* ========================= */
-  /* LOGIN BOX */
-  /* ========================= */
-  .login-box {
-    background-color: rgba(255, 255, 255, 0.1);
+  body { margin: 0; overflow: hidden; background: black; font-family: 'Segoe UI'; }
+  #login-box {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255,255,255,0.1);
     padding: 40px;
     border-radius: 12px;
-    text-align: center;
-    width: 300px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    backdrop-filter: blur(6px);
     z-index: 10;
+    text-align: center;
+    color: white;
   }
-
-  input[type="password"] {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
+  #password {
+    width: 100%; padding: 12px;
+    font-size: 18px; border-radius: 8px; border: none;
     margin-bottom: 15px;
-    font-size: 16px;
   }
-
   button {
-    background-color: #1abc9c;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 16px;
-    cursor: pointer;
-    color: #fff;
+    padding: 12px 25px;
+    border: none; border-radius: 8px;
+    background: #1abc9c; color: white;
+    font-size: 18px; cursor: pointer;
   }
-
-  /* ========================= */
-  /* CIELO STELLATO */
-  /* ========================= */
-  #stars {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: url('https://i.imgur.com/7Yb4QhZ.png') repeat;
-    background-size: contain;
-    animation: starMove 40s linear infinite;
-    display: none;
-    z-index: 1;
-  }
-
-  @keyframes starMove {
-    from { background-position: 0 0; }
-    to { background-position: 0 2000px; }
-  }
-
-  /* ========================= */
-  /* COUNTDOWN */
-  /* ========================= */
   #countdown {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 120px;
+    color: white;
+    font-size: 160px;
     opacity: 0;
-    transition: opacity 0.5s, transform 0.5s;
-    z-index: 20;
+    z-index: 9;
   }
-
-  /* ========================= */
-  /* RAZZO */
-  /* ========================= */
-  .rocket {
-    position: absolute;
-    bottom: -200px;
-    left: 50%;
-    font-size: 110px;
-    transform: translateX(-50%);
-    animation: fly 6s ease-in forwards;
-    filter: drop-shadow(0 0 20px rgba(255,255,255,0.9));
-    z-index: 5;
-  }
-
-  @keyframes fly {
-    0% { bottom: -200px; }
-    100% { bottom: 140%; }
-  }
-
-  /* Fiamma */
-  .flame {
-    position: absolute;
-    left: 50%;
-    bottom: -50px;
-    transform: translateX(-50%);
-    font-size: 45px;
-    animation: flameAnim 0.15s infinite alternate;
-    filter: drop-shadow(0 0 20px orange);
-  }
-
-  @keyframes flameAnim {
-    from { transform: translate(-50%, 0) scale(1); }
-    to { transform: translate(-50%, 8px) scale(1.4); }
-  }
-
-  /* FUMO */
-  .smoke {
-    position: absolute;
-    bottom: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 15px;
-    height: 15px;
-    background: white;
-    border-radius: 50%;
-    opacity: 0.4;
-    animation: smokeRise 3s linear forwards;
-    filter: blur(4px);
-  }
-
-  @keyframes smokeRise {
-    0% { opacity: 0.5; transform: translateX(-50%) scale(1); }
-    100% { opacity: 0; transform: translate(-50%, -200px) scale(3); }
-  }
-
-  /* FLASH INIZIALE */
   #flash {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: white;
-    opacity: 0;
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: white; opacity: 0;
+    z-index: 20;
     pointer-events: none;
-    z-index: 30;
-  }
-
-  /* FADE OUT FINALE */
-  #fade {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: black;
-    top: 0;
-    left: 0;
-    opacity: 0;
-    transition: opacity 2s;
-    z-index: 50;
   }
 </style>
-
-<script>
-  async function checkPassword() {
-    const input = document.getElementById("password").value;
-
-    const encoder = new TextEncoder();
-    const data = encoder.encode(input);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    const hashHex = Array.from(new Uint8Array(hashBuffer))
-      .map(b => b.toString(16).padStart(2, "0")).join("");
-
-    const correctHash = "6c81ccae5eb7cb46ce3b480b916c725cda52ebe10b2265271639f137e3da4167"; // Polpo2006
-
-    if (hashHex !== correctHash) {
-      alert("Password errata");
-      return;
-    }
-
-    // Nasconde il login
-    document.getElementById("login-box").style.display = "none";
-    document.getElementById("stars").style.display = "block";
-
-    // Countdown
-    startCountdown();
-  }
-
-  /* COUNTDOWN + ANIMAZIONE RAZZO */
-  function startCountdown() {
-    const countdown = document.getElementById("countdown");
-    
-    let n = 3;
-    countdown.style.opacity = 1;
-
-    const interval = setInterval(() => {
-      countdown.textContent = n;
-      countdown.style.transform = "translate(-50%, -50%) scale(1.2)";
-      setTimeout(() => countdown.style.transform = "translate(-50%, -50%) scale(1)", 200);
-      
-      if (n === 0) {
-        clearInterval(interval);
-        countdown.style.display = "none";
-        launchRocket();
-      }
-      
-      n--;
-    }, 1000);
-  }
-
-  /* RAZZO + FUMO + FLASH */
-  function launchRocket() {
-    const flash = document.getElementById("flash");
-    flash.style.opacity = 1;
-
-    setTimeout(() => flash.style.opacity = 0, 300);
-
-    const rocket = document.createElement("div");
-    rocket.className = "rocket";
-    rocket.textContent = "🚀";
-
-    const flame = document.createElement("div");
-    flame.className = "flame";
-    flame.textContent = "🔥";
-
-    rocket.appendChild(flame);
-    document.body.appendChild(rocket);
-
-    // CREA FUMO CONTINUO
-    let smokeInterval = setInterval(() => {
-      let s = document.createElement("div");
-      s.className = "smoke";
-      rocket.appendChild(s);
-      setTimeout(() => s.remove(), 3000);
-    }, 150);
-
-    // Dopo il volo → riempie lo schermo di nero e reindirizza
-    setTimeout(() => {
-      clearInterval(smokeInterval);
-      const fade = document.getElementById("fade");
-      fade.style.opacity = 1;
-      setTimeout(() => {
-        window.location.href = "home.html"; // CAMBIA QUI
-      }, 2500);
-    }, 5500);
-  }
-</script>
-
 </head>
-
 <body>
 
-<div id="flash"></div>
-<div id="fade"></div>
-
-<div class="login-box" id="login-box">
+<!-- LOGIN -->
+<div id="login-box">
   <h2>Accesso riservato</h2>
-  <input type="password" id="password" placeholder="Inserisci la password">
+  <input type="password" id="password" placeholder="Password">
   <button onclick="checkPassword()">Accedi</button>
 </div>
 
 <div id="countdown"></div>
+<div id="flash"></div>
 
-<div id="stars"></div>
+<!-- THREE.JS SCENE -->
+<canvas id="scene"></canvas>
+
+<!-- LIBRARIES -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/objects/Smoke.js"></script>
+
+<script>
+/* =========================================================
+   PASSWORD CHECK
+========================================================= */
+async function checkPassword() {
+  const input = document.getElementById("password").value;
+  const enc = new TextEncoder();
+  const data = enc.encode(input);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  const hex = [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2,"0")).join("");
+  const correct = "6c81ccae5eb7cb46ce3b480b916c725cda52ebe10b2265271639f137e3da4167";
+
+  if (hex !== correct) return alert("Password errata");
+
+  document.getElementById("login-box").style.display = "none";
+  startCountdown();
+}
+
+/* =========================================================
+   COUNTDOWN ANIMATION (GSAP)
+========================================================= */
+function startCountdown() {
+  const c = document.getElementById("countdown");
+  let n = 3;
+
+  const tick = () => {
+    c.textContent = n;
+    gsap.fromTo(c, {opacity: 0, scale: 0.2}, {opacity: 1, scale: 1.2, duration: 0.4});
+    setTimeout(() => gsap.to(c, {opacity: 0, scale: 0.4, duration: 0.4}), 600);
+
+    if (n === 0) {
+      setTimeout(() => {
+        c.style.display = "none";
+        startLaunch3D();
+      }, 500);
+    }
+    n--;
+  };
+
+  tick();
+  let interval = setInterval(() => {
+    if (n < 0) clearInterval(interval);
+    else tick();
+  }, 1000);
+}
+
+/* =========================================================
+   THREE.JS 3D STARFIELD + ROCKET + PARTICLES
+========================================================= */
+
+let scene, camera, renderer, rocket;
+
+function startLaunch3D() {
+  init3D();
+  animate();
+  launchRocketAnimation();
+}
+
+function init3D() {
+  renderer = new THREE.WebGLRenderer({
+    canvas: document.getElementById("scene"),
+    antialias: true
+  });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(
+    60, window.innerWidth / window.innerHeight, 0.1, 2000
+  );
+  camera.position.set(0, 2, 8);
+
+  /* STARS */
+  let starsGeo = new THREE.BufferGeometry();
+  let starCount = 20000;
+  let positions = new Float32Array(starCount * 3);
+
+  for (let i=0; i<starCount*3; i++) {
+    positions[i] = (Math.random() - 0.5) * 4000;
+  }
+  starsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  let starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1 });
+  let starField = new THREE.Points(starsGeo, starsMat);
+  scene.add(starField);
+
+  /* ROCKET (simple cylinder + cone) */
+  let body = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.4, 0.4, 3, 32),
+    new THREE.MeshStandardMaterial({ color: 0xffffff })
+  );
+  let nose = new THREE.Mesh(
+    new THREE.ConeGeometry(0.4, 1, 32),
+    new THREE.MeshStandardMaterial({ color: 0xff0000 })
+  );
+  nose.position.y = 2;
+  rocket = new THREE.Group();
+  rocket.add(body);
+  rocket.add(nose);
+  rocket.position.y = -6;
+  scene.add(rocket);
+
+  /* LIGHTS */
+  const light = new THREE.PointLight(0xffffff, 2, 50);
+  light.position.set(0,5,5);
+  scene.add(light);
+
+  /* Smoke system */
+  createSmoke();
+}
+
+/* SMOKE PARTICLES */
+let smokeParticles = [];
+function createSmoke() {
+  let smokeTexture = new THREE.TextureLoader().load("https://i.imgur.com/5cXFBn3.png");
+  let smokeMaterial = new THREE.MeshLambertMaterial({
+    map: smokeTexture,
+    transparent: true
+  });
+
+  for (let i = 0; i < 80; i++) {
+    let particle = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 2), smokeMaterial
+    );
+    particle.position.set(0, -5, 0);
+    particle.rotation.z = Math.random() * Math.PI;
+    scene.add(particle);
+    smokeParticles.push(particle);
+  }
+}
+
+/* ROCKET ANIMATION (GSAP) */
+function launchRocketAnimation() {
+  const flash = document.getElementById("flash");
+
+  // Flash di accensione
+  gsap.to(flash, {opacity: 1, duration: 0.2});
+  gsap.to(flash, {opacity: 0, duration: 1, delay: 0.2});
+
+  // Razzo che sale
+  gsap.to(rocket.position, {
+    y: 150,
+    duration: 12,
+    ease: "power4.in"
+  });
+
+  // Camera shake
+  gsap.fromTo(camera.position, 
+    {x:0.15}, 
+    {x:-0.15, yoyo:true, repeat:20, duration:0.05}
+  );
+
+  // Redirect finale
+  setTimeout(() => {
+    window.location.href = "home.html";
+  }, 12000);
+}
+
+/* ANIMATE LOOP */
+function animate() {
+  requestAnimationFrame(animate);
+
+  smokeParticles.forEach(p => {
+    p.position.y += 0.07;
+    p.position.x += (Math.random()-0.5)*0.05;
+    p.material.opacity -= 0.003;
+    if (p.material.opacity <= 0) {
+      p.position.set(0, -5, 0);
+      p.material.opacity = 0.4;
+    }
+  });
+
+  renderer.render(scene, camera);
+}
+</script>
 
 </body>
 </html>
